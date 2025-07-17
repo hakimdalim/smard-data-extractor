@@ -275,7 +275,7 @@ MIT License - see `LICENSE` file for details.
 
 For questions, issues, or contributions:
 - Create an issue in the GitHub repository
-- Email: [your-email@domain.com]
+- Email: [dalim@rptu.de]
 - Documentation: See `docs/` directory
 
 ---
