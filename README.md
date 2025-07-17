@@ -68,11 +68,11 @@ smard-data-extractor/
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/smard-data-extractor.git
+git clone https://github.com/hakimdalim/smard-data-extractor.git
 cd smard-data-extractor
 
 # Create virtual environment
-python -m venv venv
+python -m venv venv #or use conda
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
