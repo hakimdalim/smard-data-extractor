@@ -1,283 +1,146 @@
-# smard-data-extractor
+# SMARD Data Extractor
 
-A Python-based data extraction tool for German electricity market data from [SMARD.de](https://www.smard.de) (Strommarktdaten).
+A Python tool for extracting and processing energy market data from the German SMARD (Strommarktdaten) platform.
 
 ## Overview
 
-This project automates the extraction of German electricity market data including consumption patterns, generation sources, CO₂ intensity metrics, and market pricing information. The tool leverages SMARD's backend API endpoints to efficiently gather comprehensive energy market data.
+The SMARD Data Extractor allows you to programmatically download and consolidate energy market data from Germany's official electricity market data platform. The tool fetches multiple data streams including renewable energy generation, consumption, and pricing data, then merges them into a unified dataset.
 
 ## Features
 
-- **Net Electricity Consumption** - Extract Germany-wide consumption data (Netzlast)
-- **Actual Generation Data** - Retrieve generation data by energy source (Tatsächliche Erzeugung)
-- **CO₂ Intensity Tracking** - Monitor carbon intensity of electricity generation
-- **Market Price Data** - Access electricity market pricing information
-- **Automated Data Processing** - Batch download with configurable time ranges
-- **Multiple Export Formats** - CSV output with structured data organization
+- **Multi-source Data Extraction**: Downloads data from multiple SMARD modules simultaneously
+- **Automatic Data Merging**: Combines different energy data streams into a single CSV file
+- **Flexible Time Ranges**: Configurable date ranges for data extraction
+- **Clean Data Output**: Properly formatted CSV files with German localization support
+- **Error Handling**: Robust error handling for API requests and data processing
 
-## Data Sources
+## Supported Data Types
 
-All data is sourced from **SMARD.de** - the official German electricity market data portal operated by the Federal Network Agency (Bundesnetzagentur).
+The extractor currently supports the following SMARD data modules:
 
-### Available Data Categories
-- Electricity consumption (Netzlast)
-- Actual generation by source (Tatsächliche Erzeugung)
-- CO₂ intensity (CO₂-Intensität) 
-- Market prices (Marktpreise)
-- Cross-border electricity trading
-- Grid frequency and stability metrics
-
-## Project Structure
-
-```
-smard-data-extractor/
-├── README.md
-├── requirements.txt
-├── setup.py
-├── src/
-│   ├── __init__.py
-│   ├── smard_client.py      # Main API client
-│   ├── data_processor.py    # Data cleaning and transformation
-│   ├── validators.py        # Data validation utilities
-│   └── visualizations.py    # Plotting and analysis tools
-├── data/
-│   ├── raw/                 # Raw downloaded data
-│   ├── processed/           # Cleaned and processed datasets
-│   └── exports/             # Final CSV exports
-├── config/
-│   └── settings.yaml        # Configuration parameters
-├── scripts/
-│   ├── extract_generation.py   # Task 1: Generation data extraction
-│   ├── api_discovery.py        # Task 2: API endpoint mapping
-│   └── validate_data.py        # Data validation routines
-├── tests/
-│   ├── test_client.py
-│   ├── test_processor.py
-│   └── test_validators.py
-└── docs/
-    ├── api_endpoints.md     # Documented API patterns
-    └── data_dictionary.md   # Field definitions and units
-```
+| Data Type | Module ID | Description |
+|-----------|-----------|-------------|
+| Wind Onshore | 1004067 | Onshore wind power generation [MW] |
+| Photovoltaik | 1004068 | Solar photovoltaic generation [MW] |
+| Erdgas | 1004071 | Natural gas power generation [MW] |
+| Verbrauch | 5000410 | Total electricity consumption [MW] |
+| Pricing | 8004169 | Germany/Luxembourg electricity prices [€/MWh] |
 
 ## Installation
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip package manager
 
-### Setup
+- Python 3.7 or higher
+- Required Python packages:
+
 ```bash
-# Clone the repository
+pip install requests pandas
+```
+
+### Clone the Repository
+
+```bash
 git clone https://github.com/hakimdalim/smard-data-extractor.git
 cd smard-data-extractor
-
-# Create virtual environment
-python -m venv venv #or use conda
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Dependencies
-```
-requests>=2.28.0
-pandas>=1.5.0
-numpy>=1.24.0
-matplotlib>=3.6.0
-seaborn>=0.12.0
-pyyaml>=6.0
-selenium>=4.0.0  # Optional: for complex scraping
-beautifulsoup4>=4.11.0
-pytest>=7.0.0  # For testing
 ```
 
 ## Usage
 
-### Quick Start
-```python
-from src.smard_client import SMARDClient
+### Basic Usage
 
-# Initialize client
-client = SMARDClient()
+Run the script to extract data for the predefined time period (July 2024 - July 2025):
 
-# Extract 2024 generation data
-generation_data = client.get_generation_data(
-    start_date="2024-01-01",
-    end_date="2024-12-31",
-    resolution="hourly",
-    region="germany"
-)
-
-# Export to CSV
-generation_data.to_csv("data/exports/actual_generation_2024.csv")
-```
-
-### Command Line Interface
 ```bash
-# Extract generation data for 2024
-python scripts/extract_generation.py --year 2024 --output data/exports/
-
-# Discover and document API endpoints
-python scripts/api_discovery.py --output docs/api_endpoints.md
-
-# Validate downloaded data
-python scripts/validate_data.py --input data/raw/ --reference entso-e
+python smard_data_extractor.py
 ```
 
-## Tasks & Implementation
+### Customizing Time Range
 
-### Task 1: Generation Data Extraction ✅
-Extract hourly electricity generation data for all of 2024, organized by energy source.
+Modify the time range variables in the script:
 
-**Implementation**: `scripts/extract_generation.py`
-- Automated retrieval of Germany-wide hourly data
-- Energy source classification (wind, solar, coal, nuclear, etc.)
-- CSV export with standardized formatting
-- Progress tracking and error handling
+```python
+# Set your desired time range
+dt_from = datetime(2024, 7, 1, 0, 0)  # Start date
+dt_to = datetime(2025, 7, 1)          # End date
+```
 
-**Output**: `data/exports/actual_generation_2024.csv`
+### Adding New Data Modules
 
-### Task 2: API Endpoint Discovery 🔧
-Reverse-engineer SMARD's backend API through network analysis.
+To include additional SMARD data modules, add them to the `module_map` dictionary:
 
-**Implementation**: `scripts/api_discovery.py`
-- Browser automation for endpoint discovery
-- XHR/JSON request pattern analysis  
-- Payload structure documentation
-- Authentication and rate limiting assessment
+```python
+module_map = {
+    1004067: "Wind Onshore [MW]",
+    1004068: "Photovoltaik [MW]",
+    # Add new modules here
+    NEW_MODULE_ID: "Description [Unit]"
+}
+```
 
-**Output**: `docs/api_endpoints.md`
+## Output
 
-### Task 3: Data Validation & Quality Assurance ⚡
-Cross-reference extracted data with authoritative sources.
+The script generates a CSV file named `juli24-25_energie_zusammengefasst_mit_aufloesung.csv` containing:
 
-**Validation Sources**:
-- ENTSO-E Transparency Platform
-- Fraunhofer ISE Energy Charts
-- Agora Energiewende data
+- **Datum von** / **Datum bis**: Time period columns
+- **Data columns**: One column for each requested data type with values in MW or €/MWh
+- **Hourly resolution**: Data points for each hour in the specified time range
 
-**Metrics**:
-- Unit consistency (MW, €/MWh, gCO₂/kWh)
-- Temporal continuity checks
-- Range validation and outlier detection
-- Missing data identification and handling
+### Sample Output Structure
 
-## Data Output
-
-### CSV Structure
-All exported data follows a standardized format:
 ```csv
-timestamp,energy_source,value_mw,data_type,region,quality_flag
-2024-01-01T00:00:00Z,wind_onshore,15420.5,actual_generation,DE,validated
-2024-01-01T00:00:00Z,solar,0.0,actual_generation,DE,validated
+Datum von;Datum bis;Wind Onshore [MW];Photovoltaik [MW];Erdgas [MW];Verbrauch [MW];Deutschland/Luxemburg [€/MWh]
+01.07.2024 00:00;01.07.2024 01:00;12450.5;0;8920.3;45234.1;89.42
+01.07.2024 01:00;01.07.2024 02:00;11890.2;0;9150.7;42891.5;78.31
+...
 ```
 
-### Generated Visualizations
-- Hourly generation mix stacked area charts
-- CO₂ intensity heatmaps over time  
-- Price volatility and correlation analysis
-- Renewable energy penetration trends
-- Seasonal consumption patterns
+## API Information
 
-## Configuration
+This tool uses the official SMARD API endpoint:
+- **Base URL**: `https://www.smard.de/nip-download-manager/nip/download/market-data`
+- **Parameter Dictionaries**: `https://www.smard.de/en/user-guide`
+- **Parameter IDs**: `https://smard.api.bund.dev/`
+- **Data Format**: CSV with semicolon separation
+- **Resolution**: Hourly data
+- **Region**: Germany (DE)
 
-Edit `config/settings.yaml` to customize extraction parameters:
+## Error Handling
 
-```yaml
-extraction:
-  default_resolution: "hourly"
-  max_concurrent_requests: 10
-  retry_attempts: 3
-  timeout_seconds: 30
-
-data_sources:
-  smard_base_url: "https://www.smard.de"
-  api_version: "v1"
-  
-validation:
-  enable_cross_validation: true
-  reference_sources: ["entso-e", "fraunhofer"]
-  tolerance_percentage: 5.0
-
-export:
-  csv_encoding: "utf-8"
-  date_format: "ISO8601"
-  include_metadata: true
-```
-
-## API Documentation
-
-### Discovered Endpoints
-
-| Endpoint | Purpose | Parameters |
-|----------|---------|------------|
-| `/chart_data/{category}/{subcategory}` | Time series data | timestamp, resolution |
-| `/download/{format}` | Bulk data export | date_range, filters |
-| `/metadata/regions` | Available regions | - |
-| `/metadata/categories` | Data categories | - |
-
-For detailed API documentation, see `docs/api_endpoints.md`.
+The script includes error handling for:
+- Network connection issues
+- Invalid API responses
+- Missing or malformed data
+- File writing permissions
 
 ## Contributing
 
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Setup
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-extraction-method`)
-3. Commit your changes (`git commit -am 'Add new extraction method'`)
-4. Push to the branch (`git push origin feature/new-extraction-method`)
-5. Create a Pull Request
-
-### Development Guidelines
-- Follow PEP 8 style guidelines
-- Add unit tests for new functionality
-- Update documentation for API changes
-- Validate data quality before committing exports
-
-## Testing
-
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test categories
-pytest tests/test_client.py -v
-pytest tests/test_validators.py -v
-
-# Generate coverage report
-pytest --cov=src tests/
-```
-
-## Data Quality & Reliability
-
-### Known Limitations
-- SMARD data may include preliminary values subject to revision
-- Some historical data gaps exist, particularly for newer metrics
-- API rate limiting may affect large bulk downloads
-- CO₂ intensity calculations use grid-average methodologies
-
-### Quality Assurance
-- Automated data validation against multiple reference sources
-- Statistical outlier detection and flagging
-- Temporal continuity verification
-- Unit conversion accuracy checks
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License - see `LICENSE` file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- **Bundesnetzagentur** for providing SMARD.de data portal
-- **ENTSO-E** for transparency platform reference data
-- **Fraunhofer ISE** for Energy Charts validation data
+- Data provided by [SMARD.de](https://www.smard.de/) - the official German electricity market data platform
+- Built for researchers, analysts, and developers working with German energy market data
 
-## Support
+## Disclaimer
 
-For questions, issues, or contributions:
-- Create an issue in the GitHub repository
-- Email: [dalim@rptu.de]
-- Documentation: See `docs/` directory
+This tool is not officially affiliated with SMARD or the German Federal Network Agency. Please ensure compliance with SMARD's terms of service when using their API.
+
+## Contact
+
+Project Link: [https://github.com/hakimdalim/smard-data-extractor](https://github.com/hakimdalim/smard-data-extractor)
 
 ---
 
-**Note**: This project is for educational and research purposes. Please respect SMARD.de's terms of service and implement appropriate rate limiting when accessing their services.
+**Note**: Make sure to respect the SMARD API rate limits and terms of service when using this tool for automated data extraction.
